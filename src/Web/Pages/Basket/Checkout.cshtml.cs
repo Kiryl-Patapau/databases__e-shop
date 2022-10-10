@@ -1,4 +1,5 @@
 ﻿using Ardalis.GuardClauses;
+using BlazorShared.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +18,7 @@ public class CheckoutModel : PageModel
     private readonly IBasketService _basketService;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IOrderService _orderService;
+    private readonly IFunctionOrderService _functionOrderService;
     private string? _username = null;
     private readonly IBasketViewModelService _basketViewModelService;
     private readonly IAppLogger<CheckoutModel> _logger;
@@ -25,11 +27,13 @@ public class CheckoutModel : PageModel
         IBasketViewModelService basketViewModelService,
         SignInManager<ApplicationUser> signInManager,
         IOrderService orderService,
+        IFunctionOrderService functionOrderService,
         IAppLogger<CheckoutModel> logger)
     {
         _basketService = basketService;
         _signInManager = signInManager;
         _orderService = orderService;
+        _functionOrderService = functionOrderService;
         _basketViewModelService = basketViewModelService;
         _logger = logger;
     }
@@ -56,6 +60,20 @@ public class CheckoutModel : PageModel
             await _basketService.SetQuantities(BasketModel.Id, updateModel);
             await _orderService.CreateOrderAsync(BasketModel.Id, new Address("123 Main St.", "Kent", "OH", "United States", "44240"));
             await _basketService.DeleteBasketAsync(BasketModel.Id);
+
+            var orderDto = new OrderDto
+            {
+                ShippingAddress = "123 Main St., Kent, OH, United States, 44240",
+                Items = items
+                    .Select(i => new OrderItemDto
+                    {
+                        Id = i.Id,
+                        Quantity = i.Quantity
+                    })
+                    .ToArray(),
+                FinalPrice = new Random().Next(100)
+            };
+            await _functionOrderService.Save(orderDto);
         }
         catch (EmptyBasketOnCheckoutException emptyBasketOnCheckoutException)
         {
