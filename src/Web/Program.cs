@@ -94,6 +94,9 @@ builder.Services.AddBlazorServices();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+// order service
+builder.Services.Configure<OrderServiceConfiguration>(builder.Configuration.GetRequiredSection(OrderServiceConfiguration.ConfigPath));
+
 var app = builder.Build();
 
 app.Logger.LogInformation("App created...");
